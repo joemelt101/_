@@ -186,6 +186,7 @@ TEST (string_tokenize, TokensParsed) {
 	const char *delims = ",";
 	size_t length = 13;
 	char *tokens[3];
+    
 	tokens[0] = new char[10];
 	tokens[1] = new char[10];
 	tokens[2] = new char[10];
