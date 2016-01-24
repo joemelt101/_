@@ -46,9 +46,9 @@ bool array_deserialize(const char *src_file, void *dst_data, const size_t elem_s
 // returns an index to the located target, else return -1 for failure
 size_t array_locate(const void *data, const void *target, const size_t elem_size, const size_t elem_count);
 
-// Checks whether or not a given filename is valid in terms of acceptable characters.
+// Checks whether or not a given filename is valid in terms of acceptable characters
 // \param filename the filename to check
-// returns true if the filename does not contain "!@%^*~|\n\t" -- otherwise returns false.
+// returns true if the filename does not contain "!@%^*~|\n\t" -- otherwise returns false
 bool is_valid_filename(const char *filename);
 
 #endif
