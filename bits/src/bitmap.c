@@ -1,5 +1,6 @@
 #include "../include/bitmap.h"
-#include <limits.h>
+
+//TODO: OK to add?
 #include <math.h>
 
 
@@ -28,6 +29,10 @@ bitmap_t *bitmap_create(size_t n_bits)
 
     //allocate the given number of bits
     map->bit_count = n_bits;
+    
+    //TODO: Why not this?
+    // map->byte_count = (size_t)ceil((double)n_bits / 8);
+    
     map->byte_count = n_bits / 8;
     
     //allocate data. Make sure it is cleared out (calloc)!
@@ -38,43 +43,195 @@ bitmap_t *bitmap_create(size_t n_bits)
 
 bool bitmap_set(bitmap_t *const bitmap, const size_t bit) 
 {
-    if (! bitmap)
+    if (! bitmap || bit >= bitmap->bit_count)
     {
-        //must be instantiated!
+        //must be instantiated or bit doesn't exist
         return false;
     }
     
-    //ceil(bitmap->data)
+    //reference start of data
+    uint8_t *b = bitmap->data;
     
+    //figure out number of bytes and roll forward that number
+    b += (bit / 8);
+    
+    //figure out bit number in byte
+    size_t bit_num = bit % 8;
+    
+    //create applicable mask to set bit
+    uint8_t mask = 0x01 << bit_num;
+    
+    //apply mask
+    (*b) = (*b) | mask;
+        
     //made it to the end so success!
 	return true;
 }
 
 bool bitmap_reset(bitmap_t *const bitmap, const size_t bit) 
 {
+    if (! bitmap || bit >= bitmap->bit_count)
+    {
+        return false;
+    }
     
-	return false;
+    //ref start of data
+    uint8_t *b = bitmap->data;
+    
+    //figure out number of bytes and roll forward that number
+    b += (bit / 8);
+    
+    //figure out bit number in byte
+    size_t bit_num = bit % 8;
+    
+    //create applicable mask to reset bit
+    uint8_t mask = 0x01 << bit_num; 
+    
+    //flip
+    mask = 0xFF ^ mask;
+    
+    //apply mask
+    (*b) = (*b) & mask;
+    
+    //made it this far so success!
+	return true;
 }
 
 bool bitmap_test(const bitmap_t *const bitmap, const size_t bit) 
 {
+    if (! bitmap || bit >= bitmap->bit_count)
+    {
+        return false;
+    }
     
+    uint8_t *b = bitmap->data;
+    
+    b += (bit / 8);
+    
+    size_t byte = *b;
+    size_t bit_num = bit % 8;
+    
+    uint8_t mask = 0x01 << bit_num;
+    byte &= mask;
+    
+    if (byte > 0)
+    {
+        //it must have been true
+        return true;
+    }
+    
+    //it must have been false
     return false;
 }
 
+//TODO: Fix 
 size_t bitmap_ffs(const bitmap_t *const bitmap) 
 {
-
-	return 0;
+    if (! bitmap || ! bitmap->data)
+    {
+        return SIZE_MAX;
+    }
+    
+    size_t i = 0; //holds current byte index
+    uint8_t *d = bitmap->data; //holds current data pointer
+    
+    //while not at the end of the bitmap
+    //  and *d is equal to zero
+    while (i < bitmap->byte_count && *d == 0)
+    {
+        ++d;
+        ++i;
+    }
+    
+    if (i == bitmap->byte_count)
+    {
+        //apply mask of zeros to extraneous bits in last byte
+        uint8_t mask = 0xFF >> (8 - bitmap->bit_count % 8);
+        
+        if (((*d) & mask) == 0x00)
+        {
+            //arrived at end of bitmap and no ones...
+            return SIZE_MAX;
+        }
+    }
+    
+    //*d != 0 and i < bitmap->byte_count
+    //found a set bit
+    //figure out which bit
+    size_t bit_num = 1;
+    
+    while (*d >> bit_num != 0)
+        bit_num++;
+    
+    //i = num bytes
+    //bit_num = num bits in ith byte (zero based)
+	return (i * 8) + (bit_num - 1); //subtract 1 for zero based index
 }
 
+//TODO: Fix
 size_t bitmap_ffz(const bitmap_t *const bitmap) 
 {
-
-	return 0;
+    if (! bitmap || ! bitmap->data)
+    {
+        return SIZE_MAX;
+    }
+    
+    size_t i = 0; //holds current byte index
+    uint8_t *d = bitmap->data; //holds current data pointer
+    
+    //while not at the end of the bitmap
+    //  and *d is equal to zero
+    while (i < bitmap->byte_count && *d == 0xFF)
+    {
+        ++d;
+        ++i;
+    }
+    
+    if (i == bitmap->byte_count)
+    {
+        //apply mask of ones to extraneous bits in last byte
+        uint8_t mask = 0xFF << bitmap->bit_count % 8;
+        
+        if (((*d) | mask) == 0xFF)
+        {
+            //arrived at end of bitmap and no zeros...
+            return SIZE_MAX;
+        }
+    }
+    
+    
+    //*d != 0 or i == bitmap->byte_count
+    
+    //*d != 0 and i < bitmap->byte_count
+    //found a set bit
+    //figure out which bit in byte
+    size_t bit_num = 1;
+    
+    uint8_t t = (*d) ^ 0xFF;
+        
+    while ((uint8_t)(t << bit_num) != 0)
+        bit_num++;
+    
+    //i = num bytes
+    //bit_num = num bits in ith byte (zero based)
+	return (i * 8) + (8 - bit_num); //subtract 1 for zero based index
 }
+
+//TODO: bitmap_get_bits and bitmap_get_bytes doesn't exist...
 
 bool bitmap_destroy(bitmap_t *bitmap) 
 {
-	return false;
+    if (! bitmap)
+    {
+        return false;
+    }
+    
+    if (bitmap->data != NULL)
+    {
+        free(bitmap->data);
+    }
+    
+    free(bitmap);
+    
+	return true;
 }

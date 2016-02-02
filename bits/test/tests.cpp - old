@@ -21,10 +21,10 @@
 
  TEST(bitmap_create, GoodCreateA) {
  	bitmap_t *bitmap_A;
- 	size_t test_bit_count = 64;
+ 	size_t test_bit_count = 58;
  	bitmap_A = bitmap_create(test_bit_count);
 	ASSERT_NE(bitmap_A,(bitmap_t*)NULL);
- 	ASSERT_EQ(8, bitmap_A->byte_count);
+ 	ASSERT_EQ(test_bit_count/8, bitmap_A->byte_count);
  	if (bitmap_A) {
 	  bitmap_destroy(bitmap_A);
 	}
@@ -35,8 +35,7 @@
  	size_t test_bit_count = 371;
  	bitmap_A = bitmap_create(test_bit_count);
 	ASSERT_NE(bitmap_A,(bitmap_t*)NULL);
-     //TODO: Should be ceil(371/8)
- 	ASSERT_EQ(371/8, bitmap_A->byte_count);
+ 	ASSERT_EQ(test_bit_count/8, bitmap_A->byte_count);
  	if (bitmap_A) {
 	  bitmap_destroy(bitmap_A);
 	}
@@ -376,14 +375,6 @@ TEST(bitmap_ffs, GoodffsC) {
  }
 
 int main(int argc, char **argv) {
-    /*
-    bitmap_t* b = bitmap_create(10);
-    printf("Bytes: %d\n", b->byte_count);
-    bitmap_destroy(b);
-    */
-    
-    
     testing::InitGoogleTest(&argc, argv);
 	return RUN_ALL_TESTS();
-    
 }
